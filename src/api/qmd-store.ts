@@ -10,18 +10,34 @@ let currentDbPath: string = process.env['QMD_DB_PATH'] ?? DEFAULT_DB_PATH;
 
 export async function getStore(): Promise<QMDStore> {
   if (!store) {
-    store = await createStore({ dbPath: currentDbPath });
+    try {
+      store = await createStore({ dbPath: currentDbPath });
+    } catch (error) {
+      throw new Error(
+        `Failed to initialize QMD store at ${currentDbPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
   return store;
 }
 
 export async function reopenStore(dbPath: string): Promise<void> {
-  if (store) {
-    await store.close();
-    store = null;
+  const previousDbPath = currentDbPath;
+  const previousStore = store;
+  try {
+    if (store) {
+      await store.close();
+      store = null;
+    }
+    currentDbPath = dbPath;
+    store = await createStore({ dbPath: currentDbPath });
+  } catch (error) {
+    store = previousStore;
+    currentDbPath = previousDbPath;
+    throw new Error(
+      `Failed to reopen store at ${dbPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
-  currentDbPath = dbPath;
-  store = await createStore({ dbPath: currentDbPath });
 }
 
 export function getCurrentDbPath(): string {

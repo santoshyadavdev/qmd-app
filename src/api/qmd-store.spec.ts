@@ -9,6 +9,7 @@ vi.mock('@tobilu/qmd', () => ({
 
 describe('qmd-store', () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     vi.resetModules();
   });
 
@@ -23,5 +24,24 @@ describe('qmd-store', () => {
     const { getCurrentDbPath } = await import('./qmd-store');
     expect(getCurrentDbPath()).toContain('.qmd');
     expect(getCurrentDbPath()).toContain('index.sqlite');
+  });
+
+  it('reopenStore closes previous store and creates a new one', async () => {
+    const { createStore } = await import('@tobilu/qmd');
+    const { getStore, reopenStore, getCurrentDbPath } = await import('./qmd-store');
+    await getStore();
+    await reopenStore('/tmp/new.sqlite');
+    expect(getCurrentDbPath()).toBe('/tmp/new.sqlite');
+    expect(vi.mocked(createStore)).toHaveBeenCalledTimes(2);
+  });
+
+  it('reopenStore restores previous state on failure', async () => {
+    const { createStore } = await import('@tobilu/qmd');
+    const { getStore, reopenStore, getCurrentDbPath } = await import('./qmd-store');
+    await getStore();
+    const originalPath = getCurrentDbPath();
+    vi.mocked(createStore).mockRejectedValueOnce(new Error('bad path'));
+    await expect(reopenStore('/bad/path.sqlite')).rejects.toThrow('bad path');
+    expect(getCurrentDbPath()).toBe(originalPath);
   });
 });
