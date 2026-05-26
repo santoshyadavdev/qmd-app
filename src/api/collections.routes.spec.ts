@@ -41,6 +41,21 @@ describe('POST /api/collections', () => {
   });
 });
 
+describe('PATCH /api/collections/:name', () => {
+  it('renames a collection and returns new name', async () => {
+    const res = await request(app)
+      .patch('/api/collections/notes')
+      .send({ newName: 'journal' });
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe('journal');
+  });
+
+  it('returns 400 when newName is missing', async () => {
+    const res = await request(app).patch('/api/collections/notes').send({});
+    expect(res.status).toBe(400);
+  });
+});
+
 describe('DELETE /api/collections/:name', () => {
   it('removes a collection and returns 204', async () => {
     const res = await request(app).delete('/api/collections/notes');
