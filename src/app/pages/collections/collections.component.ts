@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { FormsModule } from '@angular/forms';
 import { QmdService } from '../../services/qmd.service';
 import { ToastService } from '../../services/toast.service';
-import type { CollectionInfo } from '../../api/types';
+import type { CollectionInfo } from '../../../api/types';
 
 @Component({
   selector: 'app-collections',

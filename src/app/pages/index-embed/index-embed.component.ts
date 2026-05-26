@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { QmdService } from '../../services/qmd.service';
 import { ToastService } from '../../services/toast.service';
 import { ProgressBarComponent } from '../../components/progress-bar/progress-bar.component';
-import type { ProgressUpdate } from '../../api/types';
+import type { ProgressUpdate } from '../../../api/types';
 
 type Operation = 'idle' | 'indexing' | 'embedding';
 
