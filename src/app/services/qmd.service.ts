@@ -1,13 +1,13 @@
-import { Injectable, inject, signal, isPlatformBrowser } from '@angular/core';
+import { Injectable, inject, signal, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { PLATFORM_ID } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type {
   SearchResultItem,
   CollectionInfo,
   ContextEntry,
   AppStatus,
-} from '../../../api/types';
+} from '../../api/types';
 
 @Injectable({ providedIn: 'root' })
 export class QmdService {
