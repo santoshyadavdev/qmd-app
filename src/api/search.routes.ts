@@ -19,9 +19,9 @@ searchRouter.get('/search', async (req, res) => {
     let rawResults;
 
     if (mode === 'keyword') {
-      rawResults = await store.searchLex(q, { limit: 20, collections: collection ? [collection] : undefined });
+      rawResults = await store.searchLex(q, { limit: 20, collection });
     } else if (mode === 'semantic') {
-      rawResults = await store.searchVector(q, { limit: 20, collections: collection ? [collection] : undefined });
+      rawResults = await store.searchVector(q, { limit: 20, collection });
     } else {
       rawResults = await store.search({ query: q, collection, limit: 20 });
     }
