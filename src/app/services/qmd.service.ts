@@ -34,8 +34,9 @@ export class QmdService {
       if (collection) params = params.set('collection', collection);
       const data = await firstValueFrom(this.http.get<SearchResultItem[]>('/api/search', { params }));
       this.results.set(data);
-    } catch (err) {
-      this.error.set(String(err));
+    } catch (err: any) {
+      const msg = err?.error?.error ?? err?.message ?? String(err);
+      this.error.set(msg);
       this.results.set([]);
     } finally {
       this.loading.set(false);

@@ -117,7 +117,9 @@ export class SearchComponent implements OnInit {
     this.hasSearched.set(true);
     await this.qmd.search(q, this.mode(), this.selectedCollection() || undefined);
     if (this.qmd.error()) {
-      this.toast.error('Search failed: ' + this.qmd.error());
+      const err = this.qmd.error();
+      const msg = typeof err === 'string' ? err : (err as any)?.message ?? 'Unknown error';
+      this.toast.error('Search failed: ' + msg);
     }
   }
 
