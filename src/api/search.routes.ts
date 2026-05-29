@@ -23,7 +23,18 @@ searchRouter.get('/search', async (req, res) => {
     } else if (mode === 'semantic') {
       rawResults = await store.searchVector(q, { limit: 20, collection });
     } else {
-      rawResults = await store.search({ query: q, collection, limit: 20 });
+      // Hybrid requires a local LLM; fall back to keyword with a 3s timeout
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('hybrid timeout')), 3000)
+      );
+      try {
+        rawResults = await Promise.race([
+          store.search({ query: q, collection, limit: 20 }),
+          timeout,
+        ]);
+      } catch {
+        rawResults = await store.searchLex(q, { limit: 20, collection });
+      }
     }
 
     const results: SearchResultItem[] = rawResults.map((r: any) => ({

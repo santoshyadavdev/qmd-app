@@ -93,7 +93,7 @@ export class SearchComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly query = signal('');
-  readonly mode = signal<SearchMode>('hybrid');
+  readonly mode = signal<SearchMode>('keyword');
   readonly hasSearched = signal(false);
   readonly selectedDoc = signal<Record<string, unknown> | null>(null);
   readonly selectedCollection = signal('');
