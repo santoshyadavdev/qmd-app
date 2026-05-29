@@ -63,12 +63,14 @@ searchRouter.get('/get', async (req, res) => {
 
   try {
     const store = await getStore();
-    const doc = await store.get(path);
+    const doc = await store.get(path, { includeBody: true });
     if (doc && 'error' in doc) {
       res.status(404).json({ error: (doc as any).error } satisfies ApiError);
       return;
     }
-    res.json(doc);
+    // getDocumentBody returns the raw markdown body
+    const body = await store.getDocumentBody(path).catch(() => null);
+    res.json({ ...doc, body });
   } catch (err) {
     res.status(500).json({ error: String(err) } satisfies ApiError);
   }
