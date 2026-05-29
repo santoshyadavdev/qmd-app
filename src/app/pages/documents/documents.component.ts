@@ -95,13 +95,8 @@ export class DocumentsComponent implements OnInit {
   private async loadDocs(): Promise<void> {
     this.loading.set(true);
     try {
-      await this.qmd.search('*', 'keyword');
-      this.docs.set(this.qmd.results().map(r => ({
-        title: r.title,
-        displayPath: r.displayPath,
-        collection: r.collection,
-        docId: r.docId,
-      })));
+      const docs = await this.qmd.listDocuments();
+      this.docs.set(docs);
     } catch {
       this.toast.error('Failed to load documents');
     } finally {

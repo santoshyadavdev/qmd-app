@@ -53,6 +53,34 @@ searchRouter.get('/search', async (req, res) => {
   }
 });
 
+searchRouter.get('/documents', async (req, res) => {
+  const collection = req.query['collection'] as string | undefined;
+  try {
+    const store = await getStore();
+    const db = (store as any).internal?.db;
+    if (!db) {
+      res.status(500).json({ error: 'Store DB not accessible' } satisfies ApiError);
+      return;
+    }
+    const sql = collection
+      ? 'SELECT collection, path, title FROM documents WHERE active=1 AND collection=?'
+      : 'SELECT collection, path, title FROM documents WHERE active=1';
+    const rows: { collection: string; path: string; title: string }[] = collection
+      ? db.prepare(sql).all(collection)
+      : db.prepare(sql).all();
+    const results = rows.map((r: any) => ({
+      title: r.title || r.path,
+      displayPath: r.collection ? `${r.collection}/${r.path}` : r.path,
+      collection: r.collection ?? '',
+      docId: '',
+    }));
+    res.json(results);
+  } catch (err) {
+    res.status(500).json({ error: String(err) } satisfies ApiError);
+  }
+});
+
+
 searchRouter.get('/get', async (req, res) => {
   const path = req.query['path'] as string | undefined;
 

@@ -43,6 +43,12 @@ export class QmdService {
     }
   }
 
+  async listDocuments(collection?: string): Promise<{ title: string; displayPath: string; collection: string; docId: string }[]> {
+    let params = new HttpParams();
+    if (collection) params = params.set('collection', collection);
+    return firstValueFrom(this.http.get<any[]>('/api/documents', { params }));
+  }
+
   async getDocument(path: string): Promise<unknown> {
     return firstValueFrom(this.http.get('/api/get', { params: { path } }));
   }
