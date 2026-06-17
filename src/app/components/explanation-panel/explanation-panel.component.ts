@@ -10,7 +10,11 @@ import type {
   imports: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="explanation-panel">
+    <section
+      class="explanation-panel"
+      aria-live="polite"
+      aria-labelledby="bug-hunt-explanation-heading">
+      <h2 id="bug-hunt-explanation-heading">Explanation</h2>
       @if (mode() === 'practice' && latestResult()) {
         <div class="result" [class.correct]="latestResult()!.isCorrect" [class.incorrect]="!latestResult()!.isCorrect">
           <h3>{{ latestResult()!.isCorrect ? 'Correct!' : 'Incorrect' }}</h3>
@@ -52,6 +56,10 @@ import type {
       padding: 1rem;
       border: 1px solid #ccc;
       margin-top: 1rem;
+    }
+
+    .explanation-panel h2 {
+      margin-top: 0;
     }
 
     .result {

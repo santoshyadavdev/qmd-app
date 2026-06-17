@@ -14,6 +14,7 @@ import type { BugFixOption } from '../../features/bug-hunt/bug-hunt.types';
             type="button"
             data-testid="fix-option"
             [class.selected]="fix.id === selectedFixId()"
+            [attr.aria-pressed]="fix.id === selectedFixId()"
             [draggable]="!disabled()"
             [disabled]="disabled()"
             (click)="fixSelected.emit(fix.id)"

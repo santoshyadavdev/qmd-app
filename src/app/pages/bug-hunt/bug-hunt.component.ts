@@ -104,21 +104,13 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
             <app-fix-pool
               [fixes]="store.currentFixes()"
               [selectedFixId]="store.selectedFixId()"
-              [disabled]="
-                store.practiceComplete() ||
-                (store.mode() === 'practice' && store.latestResult() !== null) ||
-                store.timedComplete()
-              "
+              [disabled]="interactionsDisabled()"
               (fixSelected)="store.selectFix($event)"
               (dragStarted)="store.beginDrag($event)" />
 
             <app-match-zone
               [selectedLabel]="selectedFixLabel()"
-              [disabled]="
-                store.practiceComplete() ||
-                (store.mode() === 'practice' && store.latestResult() !== null) ||
-                store.timedComplete()
-              "
+              [disabled]="interactionsDisabled()"
               [draggedFixId]="store.draggedFixId()"
               (fixDropped)="store.selectFix($event)"
               (submitClicked)="store.submitFix()" />
@@ -145,6 +137,13 @@ export class BugHuntComponent {
     const selected = fixes.find((fix) => fix.id === selectedId);
     return selected?.label ?? null;
   });
+
+  readonly interactionsDisabled = computed(() =>
+    this.store.practiceComplete() ||
+    (this.store.mode() === 'practice' && this.store.latestResult() !== null) ||
+    (this.store.mode() === 'timed' && !this.store.timedRunning() && !this.store.timedComplete()) ||
+    this.store.timedComplete(),
+  );
 
   constructor() {
     this.destroyRef.onDestroy(() => {

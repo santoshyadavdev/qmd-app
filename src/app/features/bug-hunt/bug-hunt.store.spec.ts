@@ -238,6 +238,7 @@ describe('BugHuntStore timed mode', () => {
     const store = TestBed.inject(BugHuntStore);
 
     store.setMode('timed');
+    store.startTimedRound();
     store.selectFix('replace-array');
     store.submitFix();
 
@@ -248,6 +249,25 @@ describe('BugHuntStore timed mode', () => {
     store.submitFix();
 
     expect(store.score()).toBe(2);
+    expect(store.activeScenario()?.id).toBe('stale-state');
+  });
+
+  it('ignores timed submissions until a timed run starts', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.setMode('timed');
+    store.selectFix('replace-array');
+    store.submitFix();
+
+    expect(store.score()).toBe(0);
+    expect(store.latestResult()).toBeNull();
     expect(store.activeScenario()?.id).toBe('stale-state');
   });
 
@@ -313,4 +333,26 @@ describe('BugHuntStore timed mode', () => {
       noMisses: false,
     });
   }));
+
+  it('submits the latest explicit selection after a dragged fix was previously chosen', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.beginDrag('mutate-array');
+    store.selectFix('replace-array');
+    store.submitFix();
+
+    expect(store.latestResult()).toEqual(
+      expect.objectContaining({
+        selectedFixId: 'replace-array',
+        isCorrect: true,
+      }),
+    );
+  });
 });

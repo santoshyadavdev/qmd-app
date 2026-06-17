@@ -52,6 +52,7 @@ export class BugHuntStore {
 
   selectFix(fixId: string): void {
     this.selectedFixId.set(fixId);
+    this.draggedFixId.set(null);
   }
 
   beginDrag(fixId: string): void {
@@ -70,13 +71,14 @@ export class BugHuntStore {
     this.resetRoundState();
   }
 
-  submitFix(fixId = this.draggedFixId() ?? this.selectedFixId() ?? ''): void {
+  submitFix(fixId = this.selectedFixId() ?? this.draggedFixId() ?? ''): void {
     const scenario = this.activeScenario();
     if (
       !scenario ||
       !fixId ||
       this.practiceComplete() ||
       (this.mode() === 'practice' && this.latestResult() !== null) ||
+      (this.mode() === 'timed' && !this.timedRunning()) ||
       this.timedComplete()
     ) {
       return;
