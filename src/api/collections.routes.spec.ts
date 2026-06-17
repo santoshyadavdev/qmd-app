@@ -17,6 +17,7 @@ const store = {
 let app: express.Express;
 
 beforeEach(() => {
+  vi.clearAllMocks();
   app = express();
   app.use(express.json());
   app.use('/api', createCollectionsRouter(async () => store));
@@ -28,6 +29,13 @@ describe('GET /api/collections', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].name).toBe('notes');
+    expect(store.listCollections).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls listCollections once per request', async () => {
+    const res = await request(app).get('/api/collections');
+    expect(res.status).toBe(200);
+    expect(store.listCollections).toHaveBeenCalledTimes(1);
   });
 });
 

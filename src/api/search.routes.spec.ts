@@ -4,6 +4,11 @@ import request from 'supertest';
 import type { QMDStore } from '@tobilu/qmd';
 import { createSearchRouter } from './search.routes';
 
+const documentsAll = vi.fn().mockReturnValue([
+  { collection: 'notes', path: 'test.md', title: 'Doc Title' },
+]);
+const documentsPrepare = vi.fn().mockReturnValue({ all: documentsAll });
+
 const store = {
   search: vi.fn().mockResolvedValue([
     {
@@ -18,6 +23,11 @@ const store = {
   ]),
   searchLex: vi.fn().mockResolvedValue([]),
   searchVector: vi.fn().mockResolvedValue([]),
+  internal: {
+    db: {
+      prepare: documentsPrepare,
+    },
+  },
   get: vi.fn().mockResolvedValue({
     title: 'Test Doc',
     displayPath: 'notes/test.md',
@@ -30,6 +40,7 @@ const store = {
 let app: express.Express;
 
 beforeEach(() => {
+  vi.clearAllMocks();
   app = express();
   app.use(express.json());
   app.use('/api', createSearchRouter(async () => store));
@@ -41,11 +52,31 @@ describe('GET /api/search', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].title).toBe('Test Doc');
+    expect(store.search).toHaveBeenCalledTimes(1);
   });
 
   it('returns 400 when q is missing', async () => {
     const res = await request(app).get('/api/search');
     expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/documents', () => {
+  it('returns active documents', async () => {
+    const res = await request(app).get('/api/documents');
+    expect(res.status).toBe(200);
+    expect(documentsPrepare).toHaveBeenCalledWith(
+      'SELECT collection, path, title FROM documents WHERE active=1'
+    );
+    expect(documentsAll).toHaveBeenCalledTimes(1);
+    expect(res.body).toEqual([
+      {
+        title: 'Doc Title',
+        displayPath: 'notes/test.md',
+        collection: 'notes',
+        docId: '',
+      },
+    ]);
   });
 });
 
