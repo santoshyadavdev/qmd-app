@@ -152,7 +152,9 @@ describe('BugHuntStore round reset', () => {
 });
 
 describe('BugHuntStore practice mode', () => {
-  it('scores a correct answer, keeps the current card visible, and waits for explicit advance', () => {
+  let store: BugHuntStore;
+
+  beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
         BugHuntStore,
@@ -160,8 +162,10 @@ describe('BugHuntStore practice mode', () => {
       ],
     });
 
-    const store = TestBed.inject(BugHuntStore);
+    store = TestBed.inject(BugHuntStore);
+  });
 
+  it('scores a correct answer, keeps the current card visible, and waits for explicit advance', () => {
     store.selectFix('replace-array');
     store.submitFix();
 
@@ -178,15 +182,6 @@ describe('BugHuntStore practice mode', () => {
   });
 
   it('records an incorrect answer and counts the missed category', () => {
-    TestBed.configureTestingModule({
-      providers: [
-        BugHuntStore,
-        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
-      ],
-    });
-
-    const store = TestBed.inject(BugHuntStore);
-
     store.selectFix('mutate-array');
     store.submitFix();
 
@@ -204,15 +199,6 @@ describe('BugHuntStore practice mode', () => {
   });
 
   it('resets round state when the player switches modes', () => {
-    TestBed.configureTestingModule({
-      providers: [
-        BugHuntStore,
-        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
-      ],
-    });
-
-    const store = TestBed.inject(BugHuntStore);
-
     store.selectFix('replace-array');
     store.submitFix();
     store.setMode('timed');
@@ -222,6 +208,32 @@ describe('BugHuntStore practice mode', () => {
     expect(store.streak()).toBe(0);
     expect(store.totalMistakes()).toBe(0);
     expect(store.latestResult()).toBeNull();
+    expect(store.activeScenario()?.id).toBe('stale-state');
+  });
+});
+
+describe('BugHuntStore timed mode', () => {
+  it('allows a second timed submission after the first submission auto-advances', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.setMode('timed');
+    store.selectFix('replace-array');
+    store.submitFix();
+
+    expect(store.score()).toBe(1);
+    expect(store.activeScenario()?.id).toBe('missing-null-guard');
+
+    store.selectFix('guard-input');
+    store.submitFix();
+
+    expect(store.score()).toBe(2);
     expect(store.activeScenario()?.id).toBe('stale-state');
   });
 });

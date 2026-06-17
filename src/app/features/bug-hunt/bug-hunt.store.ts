@@ -100,6 +100,9 @@ export class BugHuntStore {
     this.draggedFixId.set(null);
 
     if (this.mode() === 'timed') {
+      this.latestResult.set(null);
+      this.selectedFixId.set(null);
+      this.draggedFixId.set(null);
       this.advanceToNextScenario();
     }
   }
@@ -202,17 +205,10 @@ export class BugHuntStore {
     const nextIndex = this.activeIndex() + 1;
     if (nextIndex < scenarios.length) {
       this.activeIndex.set(nextIndex);
-      this.refreshFixes();
-      return;
-    }
-
-    if (this.mode() === 'timed') {
+    } else {
       this.activeIndex.set(0);
-      this.refreshFixes();
-      return;
     }
 
-    this.activeIndex.set(scenarios.length - 1);
     this.refreshFixes();
   }
 
