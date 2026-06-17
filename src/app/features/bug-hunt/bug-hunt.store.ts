@@ -66,9 +66,62 @@ export class BugHuntStore {
     this.resetRoundState();
   }
 
-  submitFix(_fixId?: string): void {}
+  submitFix(fixId = this.draggedFixId() ?? this.selectedFixId() ?? ''): void {
+    const scenario = this.activeScenario();
+    if (!scenario || !fixId || this.latestResult() !== null || this.practiceComplete()) {
+      return;
+    }
 
-  advancePractice(): void {}
+    const isCorrect = fixId === scenario.correctFix.id;
+    const nextScore = this.score() + (isCorrect ? 1 : 0);
+    const nextStreak = isCorrect ? this.streak() + 1 : 0;
+
+    this.score.set(nextScore);
+    this.streak.set(nextStreak);
+    this.bestStreak.set(Math.max(this.bestStreak(), nextStreak));
+
+    if (!isCorrect) {
+      this.totalMistakes.set(this.totalMistakes() + 1);
+      this.missedCategories.update((current) => ({
+        ...current,
+        [scenario.category]: (current[scenario.category] ?? 0) + 1,
+      }));
+    }
+
+    this.latestResult.set({
+      isCorrect,
+      selectedFixId: fixId,
+      correctFixId: scenario.correctFix.id,
+      explanation: scenario.explanation,
+      category: scenario.category,
+    });
+
+    this.selectedFixId.set(fixId);
+    this.draggedFixId.set(null);
+
+    if (this.mode() === 'timed') {
+      this.advanceToNextScenario();
+    }
+  }
+
+  advancePractice(): void {
+    if (this.mode() !== 'practice' || this.latestResult() === null) {
+      return;
+    }
+
+    if (this.activeIndex() === this.scenarios().length - 1) {
+      this.latestResult.set(null);
+      this.selectedFixId.set(null);
+      this.draggedFixId.set(null);
+      this.practiceComplete.set(true);
+      return;
+    }
+
+    this.latestResult.set(null);
+    this.selectedFixId.set(null);
+    this.draggedFixId.set(null);
+    this.advanceToNextScenario();
+  }
 
   startTimedRound(): void {}
 
@@ -138,6 +191,29 @@ export class BugHuntStore {
 
   private refreshFixes(): void {
     this.currentFixes.set(this.buildFixPool(this.activeScenario()));
+  }
+
+  private advanceToNextScenario(): void {
+    const scenarios = this.scenarios();
+    if (scenarios.length === 0) {
+      return;
+    }
+
+    const nextIndex = this.activeIndex() + 1;
+    if (nextIndex < scenarios.length) {
+      this.activeIndex.set(nextIndex);
+      this.refreshFixes();
+      return;
+    }
+
+    if (this.mode() === 'timed') {
+      this.activeIndex.set(0);
+      this.refreshFixes();
+      return;
+    }
+
+    this.activeIndex.set(scenarios.length - 1);
+    this.refreshFixes();
   }
 
   private buildFixPool(scenario: BugHuntScenario | null): BugFixOption[] {

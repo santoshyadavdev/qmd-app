@@ -150,3 +150,78 @@ describe('BugHuntStore round reset', () => {
     expect(store.draggedFixId()).toBeNull();
   });
 });
+
+describe('BugHuntStore practice mode', () => {
+  it('scores a correct answer, keeps the current card visible, and waits for explicit advance', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.selectFix('replace-array');
+    store.submitFix();
+
+    expect(store.score()).toBe(1);
+    expect(store.streak()).toBe(1);
+    expect(store.bestStreak()).toBe(1);
+    expect(store.latestResult()?.isCorrect).toBe(true);
+    expect(store.activeScenario()?.id).toBe('stale-state');
+
+    store.advancePractice();
+
+    expect(store.activeScenario()?.id).toBe('missing-null-guard');
+    expect(store.latestResult()).toBeNull();
+  });
+
+  it('records an incorrect answer and counts the missed category', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.selectFix('mutate-array');
+    store.submitFix();
+
+    expect(store.score()).toBe(0);
+    expect(store.streak()).toBe(0);
+    expect(store.totalMistakes()).toBe(1);
+    expect(store.missedCategories()['frontend']).toBe(1);
+    expect(store.latestResult()).toEqual(
+      expect.objectContaining({
+        isCorrect: false,
+        selectedFixId: 'mutate-array',
+        correctFixId: 'replace-array',
+      }),
+    );
+  });
+
+  it('resets round state when the player switches modes', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.selectFix('replace-array');
+    store.submitFix();
+    store.setMode('timed');
+
+    expect(store.mode()).toBe('timed');
+    expect(store.score()).toBe(0);
+    expect(store.streak()).toBe(0);
+    expect(store.totalMistakes()).toBe(0);
+    expect(store.latestResult()).toBeNull();
+    expect(store.activeScenario()?.id).toBe('stale-state');
+  });
+});
