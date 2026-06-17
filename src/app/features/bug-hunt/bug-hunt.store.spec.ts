@@ -1,7 +1,17 @@
 import { TestBed } from '@angular/core/testing';
+import { afterEach, vi } from 'vitest';
 import { BUG_HUNT_SCENARIOS } from './bug-hunt-scenarios';
 import { TIMED_ROUND_SECONDS, BugHuntStore } from './bug-hunt.store';
 import type { BugHuntScenario } from './bug-hunt.types';
+
+const fakeAsync = (testBody: () => void) => () => {
+  vi.useFakeTimers();
+  testBody();
+};
+
+const tick = (milliseconds: number): void => {
+  vi.advanceTimersByTime(milliseconds);
+};
 
 const TEST_SCENARIOS: readonly BugHuntScenario[] = [
   {
@@ -39,6 +49,10 @@ const TEST_SCENARIOS: readonly BugHuntScenario[] = [
     explanation: 'Validate the contract at the edge and fail explicitly instead of crashing deeper in the flow.',
   },
 ];
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('BugHuntStore catalog boot', () => {
   it('loads the first scenario and its fix pool from a valid catalog', () => {
@@ -236,4 +250,67 @@ describe('BugHuntStore timed mode', () => {
     expect(store.score()).toBe(2);
     expect(store.activeScenario()?.id).toBe('stale-state');
   });
+
+  it('starts a 90 second round and counts down once per second', fakeAsync(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.setMode('timed');
+    store.startTimedRound();
+
+    expect(store.remainingSeconds()).toBe(90);
+
+    tick(1000);
+
+    expect(store.remainingSeconds()).toBe(89);
+  }));
+
+  it('wraps the deck in timed mode when the timer is still running', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS.slice(0, 2) },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.setMode('timed');
+    store.startTimedRound();
+    store.submitFix('replace-array');
+    store.submitFix('guard-input');
+
+    expect(store.activeScenario()?.id).toBe('stale-state');
+  });
+
+  it('finalizes a timed summary with sorted missed categories', fakeAsync(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.setMode('timed');
+    store.startTimedRound();
+    store.submitFix('mutate-array');
+
+    tick(90000);
+
+    expect(store.timedSummary()).toEqual({
+      score: 0,
+      bestStreak: 0,
+      totalMistakes: 1,
+      mostMissedCategories: [{ category: 'frontend', misses: 1 }],
+      noMisses: false,
+    });
+  }));
 });

@@ -20,6 +20,7 @@ interface CatalogValidation {
 export class BugHuntStore {
   private readonly rawCatalog = inject(BUG_HUNT_SCENARIOS);
   private readonly catalog = this.validateCatalog(this.rawCatalog);
+  private timerId: ReturnType<typeof setInterval> | null = null;
 
   readonly mode = signal<BugHuntMode>('practice');
   readonly activeIndex = signal(0);
@@ -62,13 +63,22 @@ export class BugHuntStore {
   }
 
   setMode(mode: BugHuntMode): void {
+    this.stopTimer();
     this.mode.set(mode);
+    this.timedRunning.set(false);
+    this.timedComplete.set(false);
     this.resetRoundState();
   }
 
   submitFix(fixId = this.draggedFixId() ?? this.selectedFixId() ?? ''): void {
     const scenario = this.activeScenario();
-    if (!scenario || !fixId || this.latestResult() !== null || this.practiceComplete()) {
+    if (
+      !scenario ||
+      !fixId ||
+      this.practiceComplete() ||
+      (this.mode() === 'practice' && this.latestResult() !== null) ||
+      this.timedComplete()
+    ) {
       return;
     }
 
@@ -125,9 +135,29 @@ export class BugHuntStore {
     this.advanceToNextScenario();
   }
 
-  startTimedRound(): void {}
+  startTimedRound(): void {
+    if (this.mode() !== 'timed' || this.scenarios().length === 0) {
+      return;
+    }
+
+    this.resetRoundState();
+    this.mode.set('timed');
+    this.timedRunning.set(true);
+    this.timedComplete.set(false);
+    this.remainingSeconds.set(TIMED_ROUND_SECONDS);
+
+    this.timerId = setInterval(() => {
+      const nextValue = this.remainingSeconds() - 1;
+      this.remainingSeconds.set(nextValue);
+
+      if (nextValue <= 0) {
+        this.finishTimedRound();
+      }
+    }, 1000);
+  }
 
   private resetRoundState(): void {
+    this.stopTimer();
     this.activeIndex.set(0);
     this.refreshFixes();
     this.selectedFixId.set(null);
@@ -143,6 +173,28 @@ export class BugHuntStore {
     this.missedCategories.set({});
     this.timedRunning.set(false);
     this.timedComplete.set(false);
+  }
+
+  private finishTimedRound(): void {
+    this.stopTimer();
+    this.timedRunning.set(false);
+    this.timedComplete.set(true);
+    this.remainingSeconds.set(0);
+
+    const mostMissedCategories = Object.entries(this.missedCategories())
+      .map(([category, misses]) => ({
+        category: category as BugHuntCategory,
+        misses,
+      }))
+      .sort((left, right) => right.misses - left.misses);
+
+    this.timedSummary.set({
+      score: this.score(),
+      bestStreak: this.bestStreak(),
+      totalMistakes: this.totalMistakes(),
+      mostMissedCategories,
+      noMisses: mostMissedCategories.length === 0,
+    });
   }
 
   private validateCatalog(rawCatalog: readonly unknown[]): CatalogValidation {
@@ -193,6 +245,13 @@ export class BugHuntStore {
 
   private refreshFixes(): void {
     this.currentFixes.set(this.buildFixPool(this.activeScenario()));
+  }
+
+  private stopTimer(): void {
+    if (this.timerId !== null) {
+      clearInterval(this.timerId);
+      this.timerId = null;
+    }
   }
 
   private advanceToNextScenario(): void {
