@@ -112,7 +112,7 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
               [selectedLabel]="selectedFixLabel()"
               [disabled]="interactionsDisabled()"
               [draggedFixId]="store.draggedFixId()"
-              (fixDropped)="store.selectFix($event)"
+              (fixDropped)="submitDroppedFix($event)"
               (submitClicked)="store.submitFix()" />
 
             <app-explanation-panel
@@ -151,5 +151,10 @@ export class BugHuntComponent {
         this.store.setMode(this.store.mode());
       }
     });
+  }
+
+  protected submitDroppedFix(fixId: string): void {
+    this.store.submitFix(fixId);
+    this.store.clearDrag();
   }
 }
