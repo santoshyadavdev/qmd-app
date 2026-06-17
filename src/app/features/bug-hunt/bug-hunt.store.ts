@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { BUG_HUNT_SCENARIOS } from './bug-hunt-scenarios';
 import type {
   BugFixOption,
+  BugHuntCategory,
   BugHuntMatchResult,
   BugHuntMode,
   BugHuntScenario,
@@ -31,7 +32,7 @@ export class BugHuntStore {
   readonly practiceComplete = signal(false);
   readonly latestResult = signal<BugHuntMatchResult | null>(null);
   readonly timedSummary = signal<TimedRunSummary | null>(null);
-  readonly missedCategories = signal<Record<string, number>>({});
+  readonly missedCategories = signal<Partial<Record<BugHuntCategory, number>>>({});
   readonly timedRunning = signal(false);
   readonly timedComplete = signal(false);
 
@@ -71,7 +72,7 @@ export class BugHuntStore {
 
   private resetRoundState(): void {
     this.activeIndex.set(0);
-    this.currentFixes.set(this.buildFixPool(this.scenarios()[0] ?? null));
+    this.refreshFixes();
     this.selectedFixId.set(null);
     this.draggedFixId.set(null);
     this.score.set(0);
@@ -83,6 +84,8 @@ export class BugHuntStore {
     this.latestResult.set(null);
     this.timedSummary.set(null);
     this.missedCategories.set({});
+    this.timedRunning.set(false);
+    this.timedComplete.set(false);
   }
 
   private validateCatalog(rawCatalog: readonly unknown[]): CatalogValidation {

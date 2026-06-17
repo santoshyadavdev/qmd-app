@@ -72,3 +72,36 @@ describe('BugHuntStore catalog boot', () => {
     expect(store.emptyStateMessage()).toContain('no playable scenarios');
   });
 });
+
+describe('BugHuntStore round reset', () => {
+  it('clears timed flags and restores the first scenario fix pool when switching modes', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+      ],
+    });
+
+    const store = TestBed.inject(BugHuntStore);
+
+    store.activeIndex.set(1);
+    store.currentFixes.set([
+      TEST_SCENARIOS[1].correctFix,
+      ...TEST_SCENARIOS[1].distractorFixes,
+    ]);
+    store.timedRunning.set(true);
+    store.timedComplete.set(true);
+
+    store.setMode('timed');
+
+    expect(store.activeScenario()?.id).toBe('stale-state');
+    expect(store.currentFixes().map((fix) => fix.id).sort()).toEqual(
+      [
+        TEST_SCENARIOS[0].correctFix.id,
+        ...TEST_SCENARIOS[0].distractorFixes.map((fix) => fix.id),
+      ].sort(),
+    );
+    expect(store.timedRunning()).toBe(false);
+    expect(store.timedComplete()).toBe(false);
+  });
+});
