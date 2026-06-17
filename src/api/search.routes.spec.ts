@@ -1,36 +1,39 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
+import type { QMDStore } from '@tobilu/qmd';
+import { createSearchRouter } from './search.routes';
 
-vi.mock('./qmd-store', () => ({
-  getStore: vi.fn().mockResolvedValue({
-    search: vi.fn().mockResolvedValue([
-      {
-        title: 'Test Doc',
-        displayPath: 'notes/test.md',
-        score: 0.9,
-        snippet: 'test snippet',
-        collection: 'notes',
-        docId: '#abc123',
-        context: '',
-      },
-    ]),
-    searchLex: vi.fn().mockResolvedValue([]),
-    searchVector: vi.fn().mockResolvedValue([]),
-    get: vi.fn().mockResolvedValue({
+const store = {
+  search: vi.fn().mockResolvedValue([
+    {
       title: 'Test Doc',
       displayPath: 'notes/test.md',
-      body: '# Test\nContent here',
-      docId: '#abc123',
+      score: 0.9,
+      snippet: 'test snippet',
       collection: 'notes',
-    }),
+      docId: '#abc123',
+      context: '',
+    },
+  ]),
+  searchLex: vi.fn().mockResolvedValue([]),
+  searchVector: vi.fn().mockResolvedValue([]),
+  get: vi.fn().mockResolvedValue({
+    title: 'Test Doc',
+    displayPath: 'notes/test.md',
+    docId: '#abc123',
+    collection: 'notes',
   }),
-}));
+  getDocumentBody: vi.fn().mockResolvedValue('# Test\nContent here'),
+} as unknown as QMDStore;
 
-const { searchRouter } = await import('./search.routes');
-const app = express();
-app.use(express.json());
-app.use('/api', searchRouter);
+let app: express.Express;
+
+beforeEach(() => {
+  app = express();
+  app.use(express.json());
+  app.use('/api', createSearchRouter(async () => store));
+});
 
 describe('GET /api/search', () => {
   it('returns results for a query', async () => {
