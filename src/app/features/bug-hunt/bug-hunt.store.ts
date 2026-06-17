@@ -102,7 +102,6 @@ export class BugHuntStore {
     if (this.mode() === 'timed') {
       this.latestResult.set(null);
       this.selectedFixId.set(null);
-      this.draggedFixId.set(null);
       this.advanceToNextScenario();
     }
   }
