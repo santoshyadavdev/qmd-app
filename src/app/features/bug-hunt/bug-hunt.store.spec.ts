@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { BUG_HUNT_SCENARIOS } from './bug-hunt-scenarios';
-import { BugHuntStore } from './bug-hunt.store';
+import { TIMED_ROUND_SECONDS, BugHuntStore } from './bug-hunt.store';
 import type { BugHuntScenario } from './bug-hunt.types';
 
 const TEST_SCENARIOS: readonly BugHuntScenario[] = [
@@ -120,6 +120,9 @@ describe('BugHuntStore round reset', () => {
     // Switch mode which triggers resetRoundState()
     store.setMode('timed');
 
+    // Mode changed
+    expect(store.mode()).toBe('timed');
+
     // Existing expectations: active scenario and fix pool restored
     expect(store.activeScenario()?.id).toBe('stale-state');
     expect(store.currentFixes().map((fix) => fix.id).sort()).toEqual(
@@ -137,7 +140,7 @@ describe('BugHuntStore round reset', () => {
     expect(store.score()).toBe(0);
     expect(store.streak()).toBe(0);
     expect(store.bestStreak()).toBe(0);
-    expect(store.remainingSeconds()).toBe(90);
+    expect(store.remainingSeconds()).toBe(TIMED_ROUND_SECONDS);
     expect(store.totalMistakes()).toBe(0);
     expect(store.practiceComplete()).toBe(false);
     expect(store.latestResult()).toBeNull();

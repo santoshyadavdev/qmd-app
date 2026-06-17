@@ -9,6 +9,8 @@ import type {
   TimedRunSummary,
 } from './bug-hunt.types';
 
+export const TIMED_ROUND_SECONDS = 90;
+
 interface CatalogValidation {
   scenarios: readonly BugHuntScenario[];
   error: string | null;
@@ -27,7 +29,7 @@ export class BugHuntStore {
   readonly score = signal(0);
   readonly streak = signal(0);
   readonly bestStreak = signal(0);
-  readonly remainingSeconds = signal(90);
+  readonly remainingSeconds = signal(TIMED_ROUND_SECONDS);
   readonly totalMistakes = signal(0);
   readonly practiceComplete = signal(false);
   readonly latestResult = signal<BugHuntMatchResult | null>(null);
@@ -78,7 +80,7 @@ export class BugHuntStore {
     this.score.set(0);
     this.streak.set(0);
     this.bestStreak.set(0);
-    this.remainingSeconds.set(90);
+    this.remainingSeconds.set(TIMED_ROUND_SECONDS);
     this.totalMistakes.set(0);
     this.practiceComplete.set(false);
     this.latestResult.set(null);
