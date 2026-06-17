@@ -23,6 +23,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/context/context.component').then(m => m.ContextComponent),
   },
   {
+    path: 'bug-hunt',
+    loadComponent: () =>
+      import('./pages/bug-hunt/bug-hunt.component').then(
+        (m) => m.BugHuntComponent,
+      ),
+  },
+  {
     path: 'settings',
     loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent),
   },
