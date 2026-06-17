@@ -74,7 +74,7 @@ describe('BugHuntStore catalog boot', () => {
 });
 
 describe('BugHuntStore round reset', () => {
-  it('clears timed flags and restores the first scenario fix pool when switching modes', () => {
+  it('clears timed flags, restores the first scenario fix pool, and resets round state when switching modes', () => {
     TestBed.configureTestingModule({
       providers: [
         BugHuntStore,
@@ -84,6 +84,7 @@ describe('BugHuntStore round reset', () => {
 
     const store = TestBed.inject(BugHuntStore);
 
+    // Put the store into a non-default state across many signals
     store.activeIndex.set(1);
     store.currentFixes.set([
       TEST_SCENARIOS[1].correctFix,
@@ -92,8 +93,34 @@ describe('BugHuntStore round reset', () => {
     store.timedRunning.set(true);
     store.timedComplete.set(true);
 
+    store.score.set(42);
+    store.streak.set(3);
+    store.bestStreak.set(7);
+    store.remainingSeconds.set(12);
+    store.totalMistakes.set(9);
+    store.practiceComplete.set(true);
+    store.latestResult.set({
+      isCorrect: false,
+      selectedFixId: 'non-existent',
+      correctFixId: TEST_SCENARIOS[1].correctFix.id,
+      explanation: 'dummy',
+      category: 'backend',
+    });
+    store.timedSummary.set({
+      score: 10,
+      bestStreak: 2,
+      totalMistakes: 1,
+      mostMissedCategories: [{ category: 'frontend', misses: 2 }],
+      noMisses: false,
+    });
+    store.missedCategories.set({ frontend: 2 });
+    store.selectedFixId.set('some-fix');
+    store.draggedFixId.set('dragged-fix');
+
+    // Switch mode which triggers resetRoundState()
     store.setMode('timed');
 
+    // Existing expectations: active scenario and fix pool restored
     expect(store.activeScenario()?.id).toBe('stale-state');
     expect(store.currentFixes().map((fix) => fix.id).sort()).toEqual(
       [
@@ -101,7 +128,22 @@ describe('BugHuntStore round reset', () => {
         ...TEST_SCENARIOS[0].distractorFixes.map((fix) => fix.id),
       ].sort(),
     );
+
+    // Timed flags cleared
     expect(store.timedRunning()).toBe(false);
     expect(store.timedComplete()).toBe(false);
+
+    // New broader reset expectations
+    expect(store.score()).toBe(0);
+    expect(store.streak()).toBe(0);
+    expect(store.bestStreak()).toBe(0);
+    expect(store.remainingSeconds()).toBe(90);
+    expect(store.totalMistakes()).toBe(0);
+    expect(store.practiceComplete()).toBe(false);
+    expect(store.latestResult()).toBeNull();
+    expect(store.timedSummary()).toBeNull();
+    expect(store.missedCategories()).toEqual({});
+    expect(store.selectedFixId()).toBeNull();
+    expect(store.draggedFixId()).toBeNull();
   });
 });
