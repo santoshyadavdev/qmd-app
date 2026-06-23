@@ -126,6 +126,7 @@ describe('BugHuntStore round reset', () => {
       totalMistakes: 1,
       mostMissedCategories: [{ category: 'frontend', misses: 2 }],
       noMisses: false,
+      secondsUsed: 45,
     });
     store.missedCategories.set({ frontend: 2 });
     store.selectedFixId.set('some-fix');
@@ -249,7 +250,8 @@ describe('BugHuntStore timed mode', () => {
     store.submitFix();
 
     expect(store.score()).toBe(2);
-    expect(store.activeScenario()?.id).toBe('stale-state');
+    expect(store.timedComplete()).toBe(true);
+    expect(store.timedRunning()).toBe(false);
   });
 
   it('ignores timed submissions until a timed run starts', () => {
@@ -291,7 +293,7 @@ describe('BugHuntStore timed mode', () => {
     expect(store.remainingSeconds()).toBe(89);
   }));
 
-  it('wraps the deck in timed mode when the timer is still running', () => {
+  it('finishes the timed round when all scenarios are answered', () => {
     TestBed.configureTestingModule({
       providers: [
         BugHuntStore,
@@ -306,7 +308,9 @@ describe('BugHuntStore timed mode', () => {
     store.submitFix('replace-array');
     store.submitFix('guard-input');
 
-    expect(store.activeScenario()?.id).toBe('stale-state');
+    expect(store.timedComplete()).toBe(true);
+    expect(store.timedRunning()).toBe(false);
+    expect(store.timedSummary()).not.toBeNull();
   });
 
   it('finalizes a timed summary with sorted missed categories', fakeAsync(() => {
@@ -331,6 +335,7 @@ describe('BugHuntStore timed mode', () => {
       totalMistakes: 1,
       mostMissedCategories: [{ category: 'frontend', misses: 1 }],
       noMisses: false,
+      secondsUsed: 90,
     });
   }));
 

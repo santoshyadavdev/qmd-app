@@ -196,6 +196,7 @@ export class BugHuntStore {
       totalMistakes: this.totalMistakes(),
       mostMissedCategories,
       noMisses: mostMissedCategories.length === 0,
+      secondsUsed: TIMED_ROUND_SECONDS - this.remainingSeconds(),
     });
   }
 
@@ -265,11 +266,13 @@ export class BugHuntStore {
     const nextIndex = this.activeIndex() + 1;
     if (nextIndex < scenarios.length) {
       this.activeIndex.set(nextIndex);
+      this.refreshFixes();
+    } else if (this.mode() === 'timed') {
+      this.finishTimedRound();
     } else {
       this.activeIndex.set(0);
+      this.refreshFixes();
     }
-
-    this.refreshFixes();
   }
 
   private buildFixPool(scenario: BugHuntScenario | null): BugFixOption[] {

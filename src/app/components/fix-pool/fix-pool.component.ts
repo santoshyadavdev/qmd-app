@@ -44,23 +44,26 @@ import type { BugFixOption } from '../../features/bug-hunt/bug-hunt.types';
 
     .fixes button {
       padding: 1rem;
-      border: 2px solid #ccc;
-      background: white;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--qmd-text-primary);
       cursor: pointer;
       text-align: left;
     }
 
     .fixes button:not(:disabled):hover {
-      background: #f0f0f0;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .fixes button.selected {
-      border-color: #007bff;
-      background: #e7f3ff;
+      border-color: #60a5fa;
+      background: rgba(96, 165, 250, 0.15);
+      color: #e2e8f0;
     }
 
     .fixes button:disabled {
-      opacity: 0.5;
+      opacity: 0.45;
       cursor: not-allowed;
     }
   `,

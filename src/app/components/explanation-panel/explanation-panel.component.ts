@@ -31,6 +31,7 @@ import type {
           <h3>Timed Run Summary</h3>
           <p>Score: {{ timedSummary()!.score }}</p>
           <p>Best Streak: {{ timedSummary()!.bestStreak }}</p>
+          <p>Time Used: {{ timedSummary()!.secondsUsed }}s</p>
           @if (timedSummary()!.noMisses) {
             <p>No missed categories this run.</p>
           } @else {
@@ -67,13 +68,15 @@ import type {
     }
 
     .result.correct {
-      background: #d4edda;
-      border-left: 4px solid #28a745;
+      background: rgba(52, 211, 153, 0.15);
+      border-left: 4px solid #34d399;
+      color: var(--qmd-text-primary);
     }
 
     .result.incorrect {
-      background: #f8d7da;
-      border-left: 4px solid #dc3545;
+      background: rgba(248, 113, 113, 0.15);
+      border-left: 4px solid #f87171;
+      color: var(--qmd-text-primary);
     }
 
     .result h3 {

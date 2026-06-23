@@ -20,6 +20,7 @@ export interface BugHuntScenario {
   category: BugHuntCategory;
   difficulty: BugHuntDifficulty;
   prompt: string;
+  codeSnippet?: string;
   correctFix: BugFixOption;
   distractorFixes: readonly BugFixOption[];
   explanation: string;
@@ -44,4 +45,5 @@ export interface TimedRunSummary {
   totalMistakes: number;
   mostMissedCategories: readonly MissedCategoryStat[];
   noMisses: boolean;
+  secondsUsed: number;
 }

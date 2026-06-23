@@ -38,11 +38,13 @@ import type { BugHuntScenario } from '../../features/bug-hunt/bug-hunt.types';
       padding: 0.5rem;
       border: 1px solid #ccc;
       margin-bottom: 0.5rem;
+      color: var(--qmd-text-primary);
     }
 
     .bug-queue li.active {
-      background: #e7f3ff;
-      border-color: #007bff;
+      background: #1e3a5f;
+      border-color: #60a5fa;
+      color: #e2e8f0;
     }
   `,
 })

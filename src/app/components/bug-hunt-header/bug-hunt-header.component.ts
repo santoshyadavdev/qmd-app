@@ -47,7 +47,7 @@ import type { BugHuntMode } from '../../features/bug-hunt/bug-hunt.types';
       gap: 1rem;
       align-items: center;
       padding: 1rem;
-      border-bottom: 1px solid #ccc;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .mode-selector {
@@ -57,15 +57,16 @@ import type { BugHuntMode } from '../../features/bug-hunt/bug-hunt.types';
 
     .mode-selector button {
       padding: 0.5rem 1rem;
-      border: 1px solid #ccc;
-      background: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--qmd-text-primary);
       cursor: pointer;
     }
 
     .mode-selector button.active {
-      background: #007bff;
-      color: white;
-      border-color: #007bff;
+      background: #60a5fa;
+      color: #0d0b14;
+      border-color: #60a5fa;
     }
 
     .stats {
@@ -81,8 +82,9 @@ import type { BugHuntMode } from '../../features/bug-hunt/bug-hunt.types';
 
     .actions button {
       padding: 0.5rem 1rem;
-      border: 1px solid #ccc;
-      background: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--qmd-text-primary);
       cursor: pointer;
     }
   `,

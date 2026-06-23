@@ -9,49 +9,74 @@ export const DEFAULT_BUG_HUNT_SCENARIOS: readonly BugHuntScenario[] = [
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
+    codeSnippet: `@Component({ changeDetection: ChangeDetectionStrategy.OnPush })
+export class TodoListComponent {
+  items = signal<string[]>([]);
+
+  addItem(label: string): void {
+    const list = this.items();
+    list.push(label);       // ❌ mutates in place
+    this.items.set(list);   // same reference — no update triggered
+  }
+}`,
     correctFix: {
       id: 'replace-array',
-      label: 'Return a new array reference from the state update',
+      label: 'Use items.update(list => [...list, label]) to produce a new reference',
     },
     distractorFixes: [
-      { id: 'mutate-array', label: 'Mutate the existing array in place again' },
-      { id: 'manual-detect', label: 'Call change detection from every click handler' },
+      { id: 'mutate-array', label: 'Call items.set() after every push without changing the reference' },
+      { id: 'manual-detect', label: 'Inject ChangeDetectorRef and call markForCheck() after every push' },
     ],
-    explanation: 'Signals and OnPush updates are safest when state writes produce a new reference.',
+    explanation: 'Signals only notify subscribers when the reference changes. Use update() or spread to produce a new array instead of mutating in place.',
   },
   {
-    id: 'missing-null-guard',
-    title: 'Undefined API field crashes the handler',
-    bugPattern: 'The request handler assumes nested data is always present and throws on bad input.',
-    category: 'backend',
+    id: 'subscription-leak',
+    title: 'Observable subscription leaks on destroy',
+    bugPattern: 'A component subscribes to an HTTP stream in the constructor but never unsubscribes, leaking memory on every navigation.',
+    category: 'frontend',
     difficulty: 'intermediate',
     prompt: 'Which fix should ship?',
+    codeSnippet: `@Component({ ... })
+export class DashboardComponent {
+  items: Item[] = [];
+
+  constructor(private svc: ItemService) {
+    // ❌ never unsubscribed — runs after component is destroyed
+    this.svc.getItems().subscribe(data => {
+      this.items = data;
+    });
+  }
+}`,
     correctFix: {
-      id: 'guard-input',
-      label: 'Validate the payload and return a 400 before reading nested fields',
+      id: 'take-until-destroyed',
+      label: 'Pipe through takeUntilDestroyed() so Angular cancels the subscription on destroy',
     },
     distractorFixes: [
-      { id: 'non-null-assert', label: 'Add a non-null assertion and keep the same access path' },
-      { id: 'silent-catch', label: 'Catch the error and continue with an empty object' },
+      { id: 'unsubscribe-ngoninit', label: 'Move the subscribe() call from constructor to ngOnInit' },
+      { id: 'complete-subject', label: 'Add a manual Subject and call complete() in every component' },
     ],
-    explanation: 'Validate the contract at the edge and fail explicitly instead of crashing deeper in the flow.',
+    explanation: "takeUntilDestroyed() from @angular/core/rxjs-interop ties the subscription lifetime to the component's DestroyRef — no boilerplate Subject needed.",
   },
   {
     id: 'missing-button-name',
-    title: 'Icon-only control has no accessible name',
+    title: 'Icon-only button has no accessible name',
     bugPattern: 'A visual button exists, but assistive technology announces it as an unlabeled control.',
     category: 'accessibility',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
+    codeSnippet: `<!-- ❌ screen readers announce "button" with no context -->
+<button type="button" (click)="deleteItem(item)">
+  <ng-icon name="heroTrash" aria-hidden="true" />
+</button>`,
     correctFix: {
       id: 'add-accessible-name',
-      label: 'Give the control a visible label or aria-label that matches its purpose',
+      label: 'Add aria-label="Delete <item name>" that describes the action',
     },
     distractorFixes: [
-      { id: 'wrap-div', label: 'Wrap the icon in another div and keep the same markup' },
-      { id: 'hide-button', label: 'Hide the button from assistive technology' },
+      { id: 'wrap-span', label: 'Wrap the icon in a <span> and keep the same markup' },
+      { id: 'aria-hidden-button', label: 'Set aria-hidden="true" on the button to hide it from assistive technology' },
     ],
-    explanation: 'Interactive controls need an accessible name so screen-reader users know what they do.',
+    explanation: 'Interactive controls need an accessible name so screen-reader users know what they activate. aria-label or a visually-hidden <span> both work; hiding the button entirely removes functionality for AT users.',
   },
 ];
 

@@ -31,7 +31,7 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
   styles: `
     .match-zone {
       padding: 1rem;
-      border: 2px dashed #ccc;
+      border: 2px dashed rgba(255, 255, 255, 0.2);
       min-height: 150px;
     }
 
@@ -41,8 +41,8 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
 
     .drop-area {
       padding: 2rem;
-      border: 1px solid #ccc;
-      background: #f9f9f9;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
       text-align: center;
       margin-bottom: 1rem;
     }
@@ -50,10 +50,11 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
     .selected-label {
       font-weight: bold;
       margin: 0;
+      color: var(--qmd-text-primary);
     }
 
     .helper-text {
-      color: #666;
+      color: var(--qmd-text-secondary);
       margin: 0;
     }
 

@@ -56,11 +56,26 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
       .bug-card {
         grid-column: 2;
         padding: 1rem;
-        border: 2px solid #007bff;
-        background: white;
+        border: 2px solid #60a5fa;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--qmd-text-primary);
       }
       .bug-card h2 {
         margin-top: 0;
+        color: var(--qmd-text-primary);
+      }
+      .bug-card pre {
+        margin: 0.75rem 0 0;
+        padding: 0.75rem 1rem;
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        font-family: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        color: #e2e8f0;
+        overflow-x: auto;
+        white-space: pre;
       }
     `,
   ],
@@ -99,6 +114,9 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
                 <strong>Category:</strong> {{ scenario.category }} |
                 <strong>Difficulty:</strong> {{ scenario.difficulty }}
               </p>
+              @if (scenario.codeSnippet) {
+                <pre><code>{{ scenario.codeSnippet }}</code></pre>
+              }
             </div>
 
             <app-fix-pool
