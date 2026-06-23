@@ -45,6 +45,5 @@ export class SidebarComponent {
     { path: '/index', label: 'Index & Embed', icon: '⚡', ariaLabel: 'Index and embed documents' },
     { path: '/documents', label: 'Documents', icon: '📄', ariaLabel: 'Browse documents' },
     { path: '/context', label: 'Context', icon: '🏷️', ariaLabel: 'Manage context' },
-    { path: '/bug-hunt', label: 'Bug Hunt Lab', icon: '🐞', ariaLabel: 'Open Bug Hunt Lab' },
   ];
 }
