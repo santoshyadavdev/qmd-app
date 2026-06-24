@@ -22,6 +22,7 @@ const timedScenarioFixture: readonly BugHuntScenario[] = [
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
+    code: 'items.update(list => [...list, label])',
     correctFix: {
       id: 'replace-array',
       label: 'Return a new array reference from the state update',
@@ -40,6 +41,7 @@ const timedScenarioFixture: readonly BugHuntScenario[] = [
     category: 'backend',
     difficulty: 'intermediate',
     prompt: 'Which fix should ship?',
+    code: 'const name = payload.user.profile.name;',
     correctFix: {
       id: 'guard-input',
       label: 'Validate the payload and return a 400 before reading nested fields',
@@ -68,6 +70,7 @@ describe('BugHuntComponent', () => {
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Fix the stale state issue',
+    code: 'items.set(list);',
     correctFix: {
       id: 'replace-array',
       label: 'Replace array reference',

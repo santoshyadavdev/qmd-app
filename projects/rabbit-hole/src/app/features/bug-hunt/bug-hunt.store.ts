@@ -238,6 +238,7 @@ export class BugHuntStore {
       typeof scenario['category'] === 'string' &&
       typeof scenario['difficulty'] === 'string' &&
       typeof scenario['prompt'] === 'string' &&
+      typeof scenario['code'] === 'string' &&
       typeof scenario['explanation'] === 'string' &&
       typeof correctFix?.['id'] === 'string' &&
       typeof correctFix?.['label'] === 'string' &&

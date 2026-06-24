@@ -21,6 +21,7 @@ const TEST_SCENARIOS: readonly BugHuntScenario[] = [
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
+    code: 'items.update(list => [...list, label])',
     correctFix: {
       id: 'replace-array',
       label: 'Return a new array reference from the state update',
@@ -38,6 +39,7 @@ const TEST_SCENARIOS: readonly BugHuntScenario[] = [
     category: 'backend',
     difficulty: 'intermediate',
     prompt: 'Which fix should ship?',
+    code: 'const name = payload.user.profile.name;',
     correctFix: {
       id: 'guard-input',
       label: 'Validate the payload and return a 400 before reading nested fields',
@@ -75,7 +77,25 @@ describe('BugHuntStore catalog boot', () => {
     TestBed.configureTestingModule({
       providers: [
         BugHuntStore,
-        { provide: BUG_HUNT_SCENARIOS, useValue: [{ id: 'broken' }] },
+        {
+          provide: BUG_HUNT_SCENARIOS,
+          useValue: [
+            {
+              id: 'broken',
+              title: 'Broken scenario',
+              bugPattern: 'Missing code field',
+              category: 'frontend',
+              difficulty: 'intro',
+              prompt: 'Which fix should ship?',
+              correctFix: { id: 'fix', label: 'Fix it' },
+              distractorFixes: [
+                { id: 'wrong-a', label: 'Wrong fix A' },
+                { id: 'wrong-b', label: 'Wrong fix B' },
+              ],
+              explanation: 'Broken scenario should be rejected.',
+            },
+          ],
+        },
       ],
     });
 
