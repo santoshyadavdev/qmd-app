@@ -6,23 +6,18 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { coderabbitReviewRouter } from './server/routes/coderabbit-review.route';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
-/**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
+// Parse JSON request bodies for API routes
+app.use(express.json());
+
+// API routes
+app.use(coderabbitReviewRouter);
 
 /**
  * Serve static files from /browser
