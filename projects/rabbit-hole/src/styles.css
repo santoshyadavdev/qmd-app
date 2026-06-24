@@ -1,0 +1,44 @@
+/* Global styles and design tokens for the RabbitHole standalone app */
+
+:root {
+  --qmd-bg: #13111a;
+  --qmd-sidebar-bg: #0d0b14;
+  --qmd-surface: rgba(255, 255, 255, 0.04);
+  --qmd-surface-hover: rgba(255, 255, 255, 0.07);
+  --qmd-border: rgba(255, 255, 255, 0.08);
+  --qmd-border-active: rgba(167, 139, 250, 0.25);
+  --qmd-purple: #a78bfa;
+  --qmd-blue: #60a5fa;
+  --qmd-gradient: linear-gradient(135deg, #a78bfa, #60a5fa);
+  --qmd-text-primary: #e2e8f0;
+  --qmd-text-secondary: #9ca3af;
+  --qmd-text-muted: #6b7280;
+  --qmd-success: #34d399;
+  --qmd-warning: #f59e0b;
+  --qmd-error: #f87171;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--qmd-bg);
+  color: var(--qmd-text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}
+
+a { color: inherit; text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--qmd-purple);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }

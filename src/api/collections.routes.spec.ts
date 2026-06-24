@@ -1,22 +1,27 @@
 import { describe, it, expect, vi } from 'vitest';
+import { beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
+import type { QMDStore } from '@tobilu/qmd';
+import { createCollectionsRouter } from './collections.routes';
 
-vi.mock('./qmd-store', () => ({
-  getStore: vi.fn().mockResolvedValue({
-    listCollections: vi.fn().mockResolvedValue([
-      { name: 'notes', pwd: '/home/user/notes', glob_pattern: '**/*.md', doc_count: 10, active_count: 10, last_modified: null, includeByDefault: true },
-    ]),
-    addCollection: vi.fn().mockResolvedValue(undefined),
-    removeCollection: vi.fn().mockResolvedValue(undefined),
-    renameCollection: vi.fn().mockResolvedValue(undefined),
-  }),
-}));
+const store = {
+  listCollections: vi.fn().mockResolvedValue([
+    { name: 'notes', pwd: '/home/user/notes', glob_pattern: '**/*.md', doc_count: 10, active_count: 10, last_modified: null, includeByDefault: true },
+  ]),
+  addCollection: vi.fn().mockResolvedValue(undefined),
+  removeCollection: vi.fn().mockResolvedValue(undefined),
+  renameCollection: vi.fn().mockResolvedValue(undefined),
+} as unknown as QMDStore;
 
-const { collectionsRouter } = await import('./collections.routes');
-const app = express();
-app.use(express.json());
-app.use('/api', collectionsRouter);
+let app: express.Express;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  app = express();
+  app.use(express.json());
+  app.use('/api', createCollectionsRouter(async () => store));
+});
 
 describe('GET /api/collections', () => {
   it('returns list of collections', async () => {
@@ -24,7 +29,9 @@ describe('GET /api/collections', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].name).toBe('notes');
+    expect(store.listCollections).toHaveBeenCalledTimes(1);
   });
+
 });
 
 describe('POST /api/collections', () => {

@@ -1,36 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import express from 'express';
 import request from 'supertest';
+import type { QMDStore } from '@tobilu/qmd';
+import { createSearchRouter } from './search.routes';
 
-vi.mock('./qmd-store', () => ({
-  getStore: vi.fn().mockResolvedValue({
-    search: vi.fn().mockResolvedValue([
-      {
-        title: 'Test Doc',
-        displayPath: 'notes/test.md',
-        score: 0.9,
-        snippet: 'test snippet',
-        collection: 'notes',
-        docId: '#abc123',
-        context: '',
-      },
-    ]),
-    searchLex: vi.fn().mockResolvedValue([]),
-    searchVector: vi.fn().mockResolvedValue([]),
-    get: vi.fn().mockResolvedValue({
+const documentsAll = vi.fn().mockReturnValue([
+  { collection: 'notes', path: 'test.md', title: 'Doc Title' },
+]);
+const documentsPrepare = vi.fn().mockReturnValue({ all: documentsAll });
+
+const store = {
+  search: vi.fn().mockResolvedValue([
+    {
       title: 'Test Doc',
       displayPath: 'notes/test.md',
-      body: '# Test\nContent here',
-      docId: '#abc123',
+      score: 0.9,
+      snippet: 'test snippet',
       collection: 'notes',
-    }),
+      docId: '#abc123',
+      context: '',
+    },
+  ]),
+  searchLex: vi.fn().mockResolvedValue([]),
+  searchVector: vi.fn().mockResolvedValue([]),
+  internal: {
+    db: {
+      prepare: documentsPrepare,
+    },
+  },
+  get: vi.fn().mockResolvedValue({
+    title: 'Test Doc',
+    displayPath: 'notes/test.md',
+    docId: '#abc123',
+    collection: 'notes',
   }),
-}));
+  getDocumentBody: vi.fn().mockResolvedValue('# Test\nContent here'),
+} as unknown as QMDStore;
 
-const { searchRouter } = await import('./search.routes');
-const app = express();
-app.use(express.json());
-app.use('/api', searchRouter);
+let app: express.Express;
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  app = express();
+  app.use(express.json());
+  app.use('/api', createSearchRouter(async () => store));
+});
 
 describe('GET /api/search', () => {
   it('returns results for a query', async () => {
@@ -38,11 +52,31 @@ describe('GET /api/search', () => {
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(1);
     expect(res.body[0].title).toBe('Test Doc');
+    expect(store.search).toHaveBeenCalledTimes(1);
   });
 
   it('returns 400 when q is missing', async () => {
     const res = await request(app).get('/api/search');
     expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/documents', () => {
+  it('returns active documents', async () => {
+    const res = await request(app).get('/api/documents');
+    expect(res.status).toBe(200);
+    expect(documentsPrepare).toHaveBeenCalledWith(
+      'SELECT collection, path, title FROM documents WHERE active=1'
+    );
+    expect(documentsAll).toHaveBeenCalledTimes(1);
+    expect(res.body).toEqual([
+      {
+        title: 'Doc Title',
+        displayPath: 'notes/test.md',
+        collection: 'notes',
+        docId: '',
+      },
+    ]);
   });
 });
 
