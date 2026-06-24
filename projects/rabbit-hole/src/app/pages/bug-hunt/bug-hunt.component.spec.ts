@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { afterEach, vi } from 'vitest';
 import { BugHuntComponent } from './bug-hunt.component';
+import { CodeRabbitReviewService } from '../../services/coderabbit-review.service';
 import { BUG_HUNT_SCENARIOS } from '../../features/bug-hunt/bug-hunt-scenarios';
 import type { BugHuntScenario } from '../../features/bug-hunt/bug-hunt.types';
 
@@ -87,7 +88,10 @@ describe('BugHuntComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [BugHuntComponent],
-        providers: [{ provide: BUG_HUNT_SCENARIOS, useValue: [staleStateScenario] }],
+        providers: [
+          { provide: BUG_HUNT_SCENARIOS, useValue: [staleStateScenario] },
+          { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
+        ],
       }).compileComponents();
 
       fixture = TestBed.createComponent(BugHuntComponent);
@@ -167,7 +171,10 @@ describe('BugHuntComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [BugHuntComponent],
-        providers: [{ provide: BUG_HUNT_SCENARIOS, useValue: [] }],
+        providers: [
+          { provide: BUG_HUNT_SCENARIOS, useValue: [] },
+          { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
+        ],
       }).compileComponents();
 
       fixture = TestBed.createComponent(BugHuntComponent);
@@ -187,7 +194,10 @@ describe('BugHuntComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [BugHuntComponent],
-        providers: [{ provide: BUG_HUNT_SCENARIOS, useValue: timedScenarioFixture }],
+        providers: [
+          { provide: BUG_HUNT_SCENARIOS, useValue: timedScenarioFixture },
+          { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
+        ],
       }).compileComponents();
 
       fixture = TestBed.createComponent(BugHuntComponent);

@@ -1,6 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { Subject, of, throwError } from 'rxjs';
 import { afterEach, vi } from 'vitest';
+import { CodeRabbitReviewService } from '../../services/coderabbit-review.service';
 import { BUG_HUNT_SCENARIOS } from './bug-hunt-scenarios';
+import type { CodeRabbitReview } from './coderabbit-review.types';
 import { TIMED_ROUND_SECONDS, BugHuntStore } from './bug-hunt.store';
 import type { BugHuntScenario } from './bug-hunt.types';
 
@@ -62,6 +65,7 @@ describe('BugHuntStore catalog boot', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -96,6 +100,7 @@ describe('BugHuntStore catalog boot', () => {
             },
           ],
         },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -113,6 +118,7 @@ describe('BugHuntStore round reset', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -194,6 +200,7 @@ describe('BugHuntStore practice mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -253,6 +260,7 @@ describe('BugHuntStore timed mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -279,6 +287,7 @@ describe('BugHuntStore timed mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -298,6 +307,7 @@ describe('BugHuntStore timed mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -318,6 +328,7 @@ describe('BugHuntStore timed mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS.slice(0, 2) },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -338,6 +349,7 @@ describe('BugHuntStore timed mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -364,6 +376,7 @@ describe('BugHuntStore timed mode', () => {
       providers: [
         BugHuntStore,
         { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
       ],
     });
 
@@ -379,5 +392,76 @@ describe('BugHuntStore timed mode', () => {
         isCorrect: true,
       }),
     );
+  });
+});
+
+
+describe('CodeRabbit review', () => {
+  let mockReviewService: { requestReview: ReturnType<typeof vi.fn> };
+  let store: BugHuntStore;
+
+  const mockReview: CodeRabbitReview = {
+    comments: [{ line: 3, message: 'Array mutation', severity: 'warning' }],
+    summary: 'Found 1 issue.',
+  };
+
+  beforeEach(() => {
+    mockReviewService = { requestReview: vi.fn() };
+
+    TestBed.configureTestingModule({
+      providers: [
+        BugHuntStore,
+        { provide: BUG_HUNT_SCENARIOS, useValue: TEST_SCENARIOS },
+        { provide: CodeRabbitReviewService, useValue: mockReviewService },
+      ],
+    });
+
+    store = TestBed.inject(BugHuntStore);
+  });
+
+  it('should set reviewResult on successful review', () => {
+    mockReviewService.requestReview.mockReturnValue(of(mockReview));
+    store.requestReview();
+    expect(store.reviewLoading()).toBe(false);
+    expect(store.reviewResult()).toEqual(mockReview);
+    expect(mockReviewService.requestReview).toHaveBeenCalledWith(
+      'stale-state',
+      TEST_SCENARIOS[0].code,
+      'scenario-stale-state.ts',
+    );
+  });
+
+  it('should set reviewError on failure', () => {
+    mockReviewService.requestReview.mockReturnValue(
+      throwError(() => ({ error: { error: 'Review timed out, try again' } })),
+    );
+    store.requestReview();
+    expect(store.reviewError()).toBe('Review timed out, try again');
+    expect(store.reviewLoading()).toBe(false);
+  });
+
+  it('should not request review when already loading', () => {
+    const pendingReview = new Subject<CodeRabbitReview>();
+    mockReviewService.requestReview.mockReturnValue(pendingReview.asObservable());
+
+    store.requestReview();
+    store.requestReview();
+
+    expect(mockReviewService.requestReview).toHaveBeenCalledTimes(1);
+
+    pendingReview.next(mockReview);
+    pendingReview.complete();
+  });
+
+  it('should reset review state when advancing to next scenario', () => {
+    mockReviewService.requestReview.mockReturnValue(of(mockReview));
+    store.requestReview();
+    expect(store.reviewResult()).not.toBeNull();
+
+    store.submitFix('replace-array');
+    store.advancePractice();
+
+    expect(store.reviewResult()).toBeNull();
+    expect(store.reviewError()).toBeNull();
   });
 });

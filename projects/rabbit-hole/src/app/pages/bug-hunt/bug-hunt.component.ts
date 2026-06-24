@@ -138,7 +138,11 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
               [latestResult]="store.latestResult()"
               [practiceComplete]="store.practiceComplete()"
               [timedSummary]="store.timedSummary()"
-              (advanceRequested)="store.advancePractice()" />
+              [reviewLoading]="store.reviewLoading()"
+              [reviewResult]="store.reviewResult()"
+              [reviewError]="store.reviewError()"
+              (advanceRequested)="store.advancePractice()"
+              (reviewRequested)="store.requestReview()" />
           }
         </div>
       }

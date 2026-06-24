@@ -1,24 +1,23 @@
 import express from 'express';
 import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { CliReviewResult } from '../utils/cli-runner';
+import type { TempGitRepo } from '../utils/temp-git-repo';
+import { createCodeRabbitReviewRouter } from './coderabbit-review.route';
 
-vi.mock('../utils/temp-git-repo', () => ({
-  createTempGitRepo: vi.fn(),
-}));
-
-vi.mock('../utils/cli-runner', () => ({
-  runCodeRabbitReview: vi.fn(),
-}));
-
-import { coderabbitReviewRouter } from './coderabbit-review.route';
-import { createTempGitRepo } from '../utils/temp-git-repo';
-import { runCodeRabbitReview } from '../utils/cli-runner';
-
-const createApp = () => {
+const createApp = (
+  createTempGitRepo: (code: string, filename: string) => Promise<TempGitRepo>,
+  runCodeRabbitReview: (repoDir: string, apiKey: string) => Promise<CliReviewResult>,
+) => {
   const app = express();
   app.set('trust proxy', true);
   app.use(express.json());
-  app.use(coderabbitReviewRouter);
+  app.use(
+    createCodeRabbitReviewRouter({
+      createTempGitRepo,
+      runCodeRabbitReview,
+    }),
+  );
   return app;
 };
 
@@ -33,11 +32,19 @@ const nextIp = () => `203.0.113.${(ipCounter += 1)}`;
 
 describe('coderabbitReviewRouter', () => {
   const originalApiKey = process.env['CODERABBIT_API_KEY'];
-  const mockedCreateTempGitRepo = vi.mocked(createTempGitRepo);
-  const mockedRunCodeRabbitReview = vi.mocked(runCodeRabbitReview);
+  let mockedCreateTempGitRepo: ReturnType<
+    typeof vi.fn<(code: string, filename: string) => Promise<TempGitRepo>>
+  >;
+  let mockedRunCodeRabbitReview: ReturnType<
+    typeof vi.fn<(repoDir: string, apiKey: string) => Promise<CliReviewResult>>
+  >;
 
   beforeEach(() => {
     vi.resetAllMocks();
+    mockedCreateTempGitRepo = vi.fn<(code: string, filename: string) => Promise<TempGitRepo>>();
+    mockedRunCodeRabbitReview = vi.fn<
+      (repoDir: string, apiKey: string) => Promise<CliReviewResult>
+    >();
   });
 
   afterEach(() => {
@@ -51,7 +58,11 @@ describe('coderabbitReviewRouter', () => {
   it('returns 401 when CodeRabbit is not configured', async () => {
     delete process.env['CODERABBIT_API_KEY'];
 
-    const response = await request(createApp()).post('/api/coderabbit-review').send(validPayload);
+    const response = await request(
+      createApp(mockedCreateTempGitRepo, mockedRunCodeRabbitReview),
+    )
+      .post('/api/coderabbit-review')
+      .send(validPayload);
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({ error: 'CodeRabbit not configured' });
@@ -60,11 +71,15 @@ describe('coderabbitReviewRouter', () => {
   it('returns 400 when the request payload is invalid', async () => {
     process.env['CODERABBIT_API_KEY'] = 'test-key';
 
-    const response = await request(createApp()).post('/api/coderabbit-review').send({
-      scenarioId: 'stale-state',
-      code: '   ',
-      filename: 'demo.ts',
-    });
+    const response = await request(
+      createApp(mockedCreateTempGitRepo, mockedRunCodeRabbitReview),
+    )
+      .post('/api/coderabbit-review')
+      .send({
+        scenarioId: 'stale-state',
+        code: '   ',
+        filename: 'demo.ts',
+      });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -86,7 +101,7 @@ describe('coderabbitReviewRouter', () => {
       summary: 'Found 1 issue.',
     });
 
-    const response = await request(createApp())
+    const response = await request(createApp(mockedCreateTempGitRepo, mockedRunCodeRabbitReview))
       .post('/api/coderabbit-review')
       .set('X-Forwarded-For', nextIp())
       .send(validPayload);
@@ -112,7 +127,7 @@ describe('coderabbitReviewRouter', () => {
     });
     mockedRunCodeRabbitReview.mockRejectedValue(new Error('TIMEOUT: review timed out'));
 
-    const response = await request(createApp())
+    const response = await request(createApp(mockedCreateTempGitRepo, mockedRunCodeRabbitReview))
       .post('/api/coderabbit-review')
       .set('X-Forwarded-For', nextIp())
       .send(validPayload);
@@ -135,7 +150,7 @@ describe('coderabbitReviewRouter', () => {
       summary: 'Review complete.',
     });
 
-    const app = createApp();
+    const app = createApp(mockedCreateTempGitRepo, mockedRunCodeRabbitReview);
     const clientIp = nextIp();
 
     for (let attempt = 0; attempt < 10; attempt += 1) {
