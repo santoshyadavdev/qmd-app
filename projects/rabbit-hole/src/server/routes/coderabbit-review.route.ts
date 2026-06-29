@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { basename } from 'node:path';
 import { createTempGitRepo } from '../utils/temp-git-repo';
 import { runCodeRabbitReview } from '../utils/cli-runner';
 
@@ -51,7 +52,9 @@ export function createCodeRabbitReviewRouter(
       typeof scenarioId !== 'string' ||
       typeof code !== 'string' ||
       typeof filename !== 'string' ||
-      !code.trim()
+      !code.trim() ||
+      filename !== basename(filename) ||
+      !/^[\w.-]+$/.test(filename)
     ) {
       res.status(400).json({ error: 'Invalid request: scenarioId, code, and filename are required' });
       return;
@@ -64,9 +67,12 @@ export function createCodeRabbitReviewRouter(
       const result = await dependencies.runCodeRabbitReview(repo.dir, apiKey);
       res.json(result);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const isTimeout =
+        error instanceof Error &&
+        (error.name === 'TIMEOUT' ||
+          ('killed' in error && (error as { killed: boolean }).killed));
 
-      if (message.includes('TIMEOUT') || message.includes('timed out')) {
+      if (isTimeout) {
         res.status(504).json({ error: 'Review timed out, try again' });
       } else {
         res.status(500).json({ error: 'Review failed' });

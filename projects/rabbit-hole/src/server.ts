@@ -13,6 +13,9 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 const app = express();
 const angularApp = new AngularNodeAppEngine();
 
+// Trust the reverse proxy so req.ip reflects the real client (needed for rate limiting)
+app.set('trust proxy', true);
+
 // Parse JSON request bodies for API routes
 app.use(express.json());
 

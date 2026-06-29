@@ -27,7 +27,7 @@ import type { CodeRabbitReview } from '../../features/bug-hunt/coderabbit-review
               <p class="review-summary">{{ reviewResult()!.summary }}</p>
               @if (reviewResult()!.comments.length > 0) {
                 <ul class="review-comments" aria-label="Review comments">
-                  @for (comment of reviewResult()!.comments; track comment.line) {
+                  @for (comment of reviewResult()!.comments; track $index) {
                     <li>
                       <span class="comment-severity" [attr.data-severity]="comment.severity">{{ comment.severity }}</span>
                       <span class="comment-line">Line {{ comment.line }}:</span>

@@ -125,7 +125,9 @@ describe('coderabbitReviewRouter', () => {
       filePath: '/repo/demo.ts',
       cleanup,
     });
-    mockedRunCodeRabbitReview.mockRejectedValue(new Error('TIMEOUT: review timed out'));
+    const timeoutError = new Error('CLI review timed out');
+    timeoutError.name = 'TIMEOUT';
+    mockedRunCodeRabbitReview.mockRejectedValue(timeoutError);
 
     const response = await request(createApp(mockedCreateTempGitRepo, mockedRunCodeRabbitReview))
       .post('/api/coderabbit-review')

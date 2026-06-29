@@ -25,17 +25,31 @@ export async function runCodeRabbitReview(
     CODERABBIT_API_KEY: apiKey,
   };
 
-  const { stdout } = await execFileAsync(
-    'npx',
-    ['@coderabbitai/coderabbit', 'review', '--json'],
-    {
-      cwd: repoDir,
-      env,
-      timeout: CLI_TIMEOUT_MS,
-    },
-  );
+  try {
+    const { stdout } = await execFileAsync(
+      'npx',
+      ['@coderabbitai/coderabbit', 'review', '--json'],
+      {
+        cwd: repoDir,
+        env,
+        timeout: CLI_TIMEOUT_MS,
+        maxBuffer: 10 * 1024 * 1024,
+      },
+    );
 
-  return parseCliOutput(stdout);
+    return parseCliOutput(stdout);
+  } catch (error: unknown) {
+    if (
+      error instanceof Error &&
+      'killed' in error &&
+      (error as { killed: boolean }).killed
+    ) {
+      const timeoutErr = new Error('CLI review timed out');
+      timeoutErr.name = 'TIMEOUT';
+      throw timeoutErr;
+    }
+    throw error;
+  }
 }
 
 function parseCliOutput(stdout: string): CliReviewResult {
