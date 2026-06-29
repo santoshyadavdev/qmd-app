@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { afterEach, vi } from 'vitest';
 import { BugHuntComponent } from './bug-hunt.component';
+import { CodeRabbitReviewService } from '../../services/coderabbit-review.service';
 import { BUG_HUNT_SCENARIOS } from '../../features/bug-hunt/bug-hunt-scenarios';
 import type { BugHuntScenario } from '../../features/bug-hunt/bug-hunt.types';
 
@@ -22,6 +23,7 @@ const timedScenarioFixture: readonly BugHuntScenario[] = [
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
+    code: 'items.update(list => [...list, label])',
     correctFix: {
       id: 'replace-array',
       label: 'Return a new array reference from the state update',
@@ -40,6 +42,7 @@ const timedScenarioFixture: readonly BugHuntScenario[] = [
     category: 'backend',
     difficulty: 'intermediate',
     prompt: 'Which fix should ship?',
+    code: 'const name = payload.user.profile.name;',
     correctFix: {
       id: 'guard-input',
       label: 'Validate the payload and return a 400 before reading nested fields',
@@ -68,6 +71,7 @@ describe('BugHuntComponent', () => {
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Fix the stale state issue',
+    code: 'items.set(list);',
     correctFix: {
       id: 'replace-array',
       label: 'Replace array reference',
@@ -84,7 +88,10 @@ describe('BugHuntComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [BugHuntComponent],
-        providers: [{ provide: BUG_HUNT_SCENARIOS, useValue: [staleStateScenario] }],
+        providers: [
+          { provide: BUG_HUNT_SCENARIOS, useValue: [staleStateScenario] },
+          { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
+        ],
       }).compileComponents();
 
       fixture = TestBed.createComponent(BugHuntComponent);
@@ -164,7 +171,10 @@ describe('BugHuntComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [BugHuntComponent],
-        providers: [{ provide: BUG_HUNT_SCENARIOS, useValue: [] }],
+        providers: [
+          { provide: BUG_HUNT_SCENARIOS, useValue: [] },
+          { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
+        ],
       }).compileComponents();
 
       fixture = TestBed.createComponent(BugHuntComponent);
@@ -184,7 +194,10 @@ describe('BugHuntComponent', () => {
     beforeEach(async () => {
       await TestBed.configureTestingModule({
         imports: [BugHuntComponent],
-        providers: [{ provide: BUG_HUNT_SCENARIOS, useValue: timedScenarioFixture }],
+        providers: [
+          { provide: BUG_HUNT_SCENARIOS, useValue: timedScenarioFixture },
+          { provide: CodeRabbitReviewService, useValue: { requestReview: vi.fn() } },
+        ],
       }).compileComponents();
 
       fixture = TestBed.createComponent(BugHuntComponent);

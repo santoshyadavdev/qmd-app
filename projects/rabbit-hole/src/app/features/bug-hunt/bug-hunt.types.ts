@@ -20,7 +20,7 @@ export interface BugHuntScenario {
   category: BugHuntCategory;
   difficulty: BugHuntDifficulty;
   prompt: string;
-  codeSnippet?: string;
+  code: string;
   correctFix: BugFixOption;
   distractorFixes: readonly BugFixOption[];
   explanation: string;

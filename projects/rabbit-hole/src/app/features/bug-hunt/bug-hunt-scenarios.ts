@@ -9,7 +9,7 @@ export const DEFAULT_BUG_HUNT_SCENARIOS: readonly BugHuntScenario[] = [
     category: 'frontend',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
-    codeSnippet: `@Component({ changeDetection: ChangeDetectionStrategy.OnPush })
+    code: `@Component({ changeDetection: ChangeDetectionStrategy.OnPush })
 export class TodoListComponent {
   items = signal<string[]>([]);
 
@@ -36,7 +36,7 @@ export class TodoListComponent {
     category: 'frontend',
     difficulty: 'intermediate',
     prompt: 'Which fix should ship?',
-    codeSnippet: `@Component({ ... })
+    code: `@Component({ ... })
 export class DashboardComponent {
   items: Item[] = [];
 
@@ -64,7 +64,7 @@ export class DashboardComponent {
     category: 'accessibility',
     difficulty: 'intro',
     prompt: 'Which fix should ship?',
-    codeSnippet: `<!-- ❌ screen readers announce "button" with no context -->
+    code: `<!-- ❌ screen readers announce "button" with no context -->
 <button type="button" (click)="deleteItem(item)">
   <ng-icon name="heroTrash" aria-hidden="true" />
 </button>`,

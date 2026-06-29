@@ -114,8 +114,8 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
                 <strong>Category:</strong> {{ scenario.category }} |
                 <strong>Difficulty:</strong> {{ scenario.difficulty }}
               </p>
-              @if (scenario.codeSnippet) {
-                <pre><code>{{ scenario.codeSnippet }}</code></pre>
+              @if (scenario.code) {
+                <pre><code>{{ scenario.code }}</code></pre>
               }
             </div>
 
@@ -138,7 +138,11 @@ import { ExplanationPanelComponent } from '../../components/explanation-panel/ex
               [latestResult]="store.latestResult()"
               [practiceComplete]="store.practiceComplete()"
               [timedSummary]="store.timedSummary()"
-              (advanceRequested)="store.advancePractice()" />
+              [reviewLoading]="store.reviewLoading()"
+              [reviewResult]="store.reviewResult()"
+              [reviewError]="store.reviewError()"
+              (advanceRequested)="store.advancePractice()"
+              (reviewRequested)="store.requestReview()" />
           }
         </div>
       }

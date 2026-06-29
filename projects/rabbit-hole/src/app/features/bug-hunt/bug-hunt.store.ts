@@ -1,5 +1,7 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { CodeRabbitReviewService } from '../../services/coderabbit-review.service';
 import { BUG_HUNT_SCENARIOS } from './bug-hunt-scenarios';
+import type { CodeRabbitReview } from './coderabbit-review.types';
 import type {
   BugFixOption,
   BugHuntCategory,
@@ -20,6 +22,7 @@ interface CatalogValidation {
 export class BugHuntStore {
   private readonly rawCatalog = inject(BUG_HUNT_SCENARIOS);
   private readonly catalog = this.validateCatalog(this.rawCatalog);
+  private readonly reviewService = inject(CodeRabbitReviewService);
   private timerId: ReturnType<typeof setInterval> | null = null;
 
   readonly mode = signal<BugHuntMode>('practice');
@@ -38,6 +41,9 @@ export class BugHuntStore {
   readonly missedCategories = signal<Partial<Record<BugHuntCategory, number>>>({});
   readonly timedRunning = signal(false);
   readonly timedComplete = signal(false);
+  readonly reviewLoading = signal(false);
+  readonly reviewResult = signal<CodeRabbitReview | null>(null);
+  readonly reviewError = signal<string | null>(null);
 
   readonly emptyStateMessage = computed(() => this.catalog.error);
   readonly scenarios = computed(() => this.catalog.scenarios);
@@ -127,6 +133,7 @@ export class BugHuntStore {
       this.latestResult.set(null);
       this.selectedFixId.set(null);
       this.draggedFixId.set(null);
+      this.resetReviewState();
       this.practiceComplete.set(true);
       return;
     }
@@ -134,6 +141,7 @@ export class BugHuntStore {
     this.latestResult.set(null);
     this.selectedFixId.set(null);
     this.draggedFixId.set(null);
+    this.resetReviewState();
     this.advanceToNextScenario();
   }
 
@@ -158,6 +166,31 @@ export class BugHuntStore {
     }, 1000);
   }
 
+  requestReview(): void {
+    const scenario = this.activeScenario();
+    if (!scenario || this.reviewLoading()) {
+      return;
+    }
+
+    this.reviewLoading.set(true);
+    this.reviewError.set(null);
+    this.reviewResult.set(null);
+
+    const filename = `scenario-${scenario.id}.ts`;
+
+    this.reviewService.requestReview(scenario.id, scenario.code, filename).subscribe({
+      next: (result) => {
+        this.reviewResult.set(result);
+        this.reviewLoading.set(false);
+      },
+      error: (err) => {
+        const message = err?.error?.error ?? err?.message ?? 'Review failed';
+        this.reviewError.set(message);
+        this.reviewLoading.set(false);
+      },
+    });
+  }
+
   private resetRoundState(): void {
     this.stopTimer();
     this.activeIndex.set(0);
@@ -175,6 +208,7 @@ export class BugHuntStore {
     this.missedCategories.set({});
     this.timedRunning.set(false);
     this.timedComplete.set(false);
+    this.resetReviewState();
   }
 
   private finishTimedRound(): void {
@@ -238,6 +272,7 @@ export class BugHuntStore {
       typeof scenario['category'] === 'string' &&
       typeof scenario['difficulty'] === 'string' &&
       typeof scenario['prompt'] === 'string' &&
+      typeof scenario['code'] === 'string' &&
       typeof scenario['explanation'] === 'string' &&
       typeof correctFix?.['id'] === 'string' &&
       typeof correctFix?.['label'] === 'string' &&
@@ -258,6 +293,8 @@ export class BugHuntStore {
   }
 
   private advanceToNextScenario(): void {
+    this.resetReviewState();
+
     const scenarios = this.scenarios();
     if (scenarios.length === 0) {
       return;
@@ -293,5 +330,11 @@ export class BugHuntStore {
       [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
     }
     return copy;
+  }
+
+  private resetReviewState(): void {
+    this.reviewLoading.set(false);
+    this.reviewResult.set(null);
+    this.reviewError.set(null);
   }
 }
